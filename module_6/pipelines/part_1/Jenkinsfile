@@ -11,6 +11,7 @@ pipeline {
         plan='plan-devops-sura-gmolinao-dev'
         app='app-devops-sura-starter-gmolinao-dev'
         image='crdevopssuragmolinaodev.azurecr.io/starter:latest'
+        ToA = credentials('SonarQubeToA')
     }
 
     stages {
@@ -28,11 +29,20 @@ pipeline {
         }
         
     stage('SonarQube Analysis') {
-            def scannerHome = tool 'SonarScanner';
-            withSonarQubeEnv() {
-                sh "${scannerHome}/bin/sonar-scanner"   
+            steps {
+                nodejs(nodeJSInstallationName: 'Node 12.22.3') {
+                    sh '''
+                    npx sonar-scanner \
+                    -Dsonar.host.url=http://vm-devops-sura-sonarqube-gmolinao-dev.southcentralus.cloudapp.azure.com/ \
+                    -Dsonar.login=$ToA \
+                    -Dsonar.sources=./fe-devops-sura-gmolinao-dev \
+                    -Dsonar.exclusions=./fe-devops-sura-omolinao-dev/node_modules \
+                    -Dsonar.projectName=DevOps \
+                    -Dsonar.projectKey=DevOps
+                    '''
+                }
             }
-          }
+        }
    
     stage('Build') { 
             steps {
